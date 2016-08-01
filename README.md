@@ -20,7 +20,8 @@ ruby ximalaya http://www.ximalaya.com/11129614/album/2872220 侯景传
 
 依赖:
 ------
-[oga](https://github.com/YorickPeterse/oga "oga")
+https://github.com/YorickPeterse/oga  
+https://github.com/rdp/os  
 
 Notes:
 ------
