@@ -14,7 +14,7 @@ www.kaolafm.com
 使用方法:
 ------
 ruby ximalya http://www.ximalaya.com/11129614/album/2872220  
-如果希望下载标题包含某个词(如:侯景传)的音频，可以使用  
+如果希望下载标题包含某个词(如:侯景传)的音频，可以使用:  
 ruby ximalaya http://www.ximalaya.com/11129614/album/2872220 侯景传
 
 Notes:
