@@ -24,4 +24,4 @@ ruby ximalaya http://www.ximalaya.com/11129614/album/2872220 侯景传
 
 Notes:
 ------
-ximalya是https://github.com/zhenze12345/ximalaya的多线程版本
+ximalya是[https://github.com/zhenze12345/ximalaya](https://github.com/zhenze12345/ximalaya)的多线程版本
