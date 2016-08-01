@@ -1,0 +1,53 @@
+#!/usr/bin/ruby
+
+require 'oga'
+require 'json'
+require 'net/http'
+require 'open-uri'
+require 'date'
+require 'os'
+
+def fetch_sound_list(url)
+	puts 'fetching sound list...'
+	document = Oga.parse_html(Net::HTTP.get(URI.parse(url)))
+	album_id = document.xpath('//input[@id="albumID" and @type="hidden"]/attribute::value').each { |elem| elem.text }[0]
+	json_result = JSON::parse(Net::HTTP.get(URI.parse('http://www.kaolafm.com/webapi/audios/list?id=' + album_id.to_s + '&pagesize=1&pagenum=1&sorttype=1&_=' + Time.now.to_datetime.strftime)))
+	raise 'fetch audio count failed' if json_result['message'] != 'success'
+	audio_count = json_result['result']['count']
+	json_result = JSON::parse(Net::HTTP.get(URI.parse('http://www.kaolafm.com/webapi/audios/list?id=' + album_id.to_s + '&pagesize=' + audio_count.to_s + '&pagenum=1&sorttype=1&_=' + Time.now.to_datetime.strftime)))
+	raise 'fetch audio list failed' if json_result['message'] != 'success'
+	return Hash[json_result['result']['dataList'].map{|info|name = info['audioName'].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3/, ''); [name.match(/^\d/) ? name : sprintf("%02d%s", info['orderNum'], name), info['mp3PlayUrl']]}]
+end
+
+def fetch_audio_file(url, name)
+	return if File.exist?(name + '.mp3') or url == nil
+	puts 'downloading ' + name + '...'
+	open(name + '.mp3', 'wb') do |file|
+		file << open(url).read
+	end
+	puts 'download ' + name + ' successfully'
+end
+
+def fetch_audio(argv)
+	if argv.empty?
+		puts "usage: ./ximalaya.rb url [filter]"
+		exit 1
+	end
+
+	url = argv[0]
+	filter = argv[1]
+
+	hash = fetch_sound_list(url)
+	hash = hash.select{ |key, value| value.force_encoding('UTF-8').match(/#{filter}/) } if filter
+	begin
+		hash.keys.each do |name|
+			url = hash[name]
+			fetch_audio_file(url, name)
+		end
+	rescue Exception => e
+		puts "catch one Exception: " + e.message
+		puts e.backtrace
+	end
+end
+
+fetch_audio(ARGV)

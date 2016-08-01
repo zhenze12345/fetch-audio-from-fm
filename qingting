@@ -1,0 +1,89 @@
+#!/usr/bin/ruby
+
+require 'json'
+require 'net/http'
+require 'open-uri'
+require 'thread'
+require 'open3'
+require 'os'
+
+def fetch_sound_list(url)
+	puts 'fetching sound list...'
+	body = Net::HTTP.get(URI.parse(url))
+	return Hash[JSON.parse(body).map.with_index(1) {|info, index| name = info['name'].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3/, ''); [name.match(/^\d/) ? name : sprintf("%02d%s", index, name) , 'http://od.qingting.fm' + JSON.parse(info['play_info_jstr'])['urls'][0]]}]
+end
+
+def convert_m4a_to_mp3(name)
+	if not File.exist?(name + '.mp3') and File.exist?(name + '.m4a')
+		puts 'converting ' + name + '...'
+		stdout, stderr, status = Open3.capture3('ffmpeg -loglevel 16 -i ' + name + '.m4a -map 0:a -codec:a libmp3lame -q:a 4 -map_metadata -1 ' + name + '.mp3')
+		if status.success?
+			puts 'convert ' + name + ' successfully'
+		else
+			puts 'convert ' + name + ' failed '
+			File.delete(name + '.mp3') if File.exist?(name + '.mp3')
+		end
+	end
+end
+
+def fetch_audio_file(url, name)
+	return if File.exist?(name + '.m4a') or File.exist?(name + '.mp3') or url == nil
+	puts 'downloading ' + name + '...'
+	open(name + '.m4a', 'wb') do |file|
+		file << open(url).read
+	end
+	puts 'download ' + name + ' successfully'
+end
+
+def convert_url_to_ajax(url)
+	if url =~ /(http:\/\/www.qingting.fm\/)(?:#\/)?(vchannels\/.*)/
+		return $1 + 's/' + $2 + '/ajax'
+	else
+		puts "invalid url: " + url
+		exit 1
+	end
+end
+
+def fetch_audio(argv)
+	if argv.empty?
+		puts "usage: ./ximalaya.rb url [filter]"
+		exit 1
+	end
+
+	url = convert_url_to_ajax(argv[0])
+	puts url
+	filter = argv[1]
+
+	queue = Queue.new
+	hash = fetch_sound_list(url)
+	hash = hash.select{ |key, value| key.force_encoding('UTF-8').match(/#{filter}/) } if filter
+	puts 'there are ' + hash.keys.length.to_s + ' audio in the list'
+	thread_count = [[OS.cpu_count - 1, 1].max, hash.keys.length].min
+	thread_pool = (0...thread_count).map do
+		Thread.new do
+			begin
+				while name = queue.pop
+					convert_m4a_to_mp3(name)
+				end
+			end
+		end
+	end
+	begin
+		hash.keys.each do |name|
+			url = hash[name]
+			fetch_audio_file(url, name)
+			queue.push name
+		end
+	rescue Exception => e
+		puts "catch one Exception: " + e.message
+		puts e.backtrace
+	end
+	(0...thread_count).map do ||
+		queue.push nil
+	end
+	puts "waiting for the work threads finish"
+	thread_pool.map(&:join)
+	hash.keys.each { |name| File.delete(name + '.m4a') if File.exist?(name + '.m4a') }
+end
+
+fetch_audio(ARGV)
