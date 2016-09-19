@@ -1,7 +1,6 @@
 #!/usr/bin/ruby
 
 require 'json'
-require 'net/http'
 require 'open-uri'
 require 'thread'
 require 'open3'
@@ -9,7 +8,7 @@ require 'os'
 
 def fetch_sound_list(url)
 	puts 'fetching sound list...'
-	body = Net::HTTP.get(URI.parse(url))
+	body = open(url).read
 	return Hash[JSON.parse(body).map.with_index(1) {|info, index| name = info['name'].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3/, ''); [name.match(/^\d/) ? name : sprintf("%02d%s", index, name) , 'http://od.qingting.fm' + JSON.parse(info['play_info_jstr'])['urls'][0]]}]
 end
 

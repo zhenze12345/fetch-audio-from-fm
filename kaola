@@ -2,19 +2,18 @@
 
 require 'oga'
 require 'json'
-require 'net/http'
 require 'open-uri'
 require 'date'
 require 'os'
 
 def fetch_sound_list(url)
 	puts 'fetching sound list...'
-	document = Oga.parse_html(Net::HTTP.get(URI.parse(url)))
+	document = Oga.parse_html(open(url).read)
 	album_id = document.xpath('//input[@id="albumID" and @type="hidden"]/attribute::value').each { |elem| elem.text }[0]
-	json_result = JSON::parse(Net::HTTP.get(URI.parse('http://www.kaolafm.com/webapi/audios/list?id=' + album_id.to_s + '&pagesize=1&pagenum=1&sorttype=1&_=' + Time.now.to_datetime.strftime)))
+	json_result = JSON::parse(open('http://www.kaolafm.com/webapi/audios/list?id=' + album_id.to_s + '&pagesize=1&pagenum=1&sorttype=1&_=' + Time.now.to_datetime.strftime).read)
 	raise 'fetch audio count failed' if json_result['message'] != 'success'
 	audio_count = json_result['result']['count']
-	json_result = JSON::parse(Net::HTTP.get(URI.parse('http://www.kaolafm.com/webapi/audios/list?id=' + album_id.to_s + '&pagesize=' + audio_count.to_s + '&pagenum=1&sorttype=1&_=' + Time.now.to_datetime.strftime)))
+	json_result = JSON::parse(open('http://www.kaolafm.com/webapi/audios/list?id=' + album_id.to_s + '&pagesize=' + audio_count.to_s + '&pagenum=1&sorttype=1&_=' + Time.now.to_datetime.strftime).read)
 	raise 'fetch audio list failed' if json_result['message'] != 'success'
 	return Hash[json_result['result']['dataList'].map{|info|name = info['audioName'].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3/, ''); [name.match(/^\d/) ? name : sprintf("%02d%s", info['orderNum'], name), info['mp3PlayUrl']]}]
 end

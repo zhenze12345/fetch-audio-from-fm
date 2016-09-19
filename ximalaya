@@ -2,7 +2,6 @@
 
 require 'oga'
 require 'json'
-require 'net/http'
 require 'open-uri'
 require 'thread'
 require 'open3'
@@ -22,7 +21,7 @@ end
 def fetch_audio_url(id, name)
 	return if File.exist?(name + '.mp3') or File.exist?(name + '.m4a')
 	puts 'fetching audio url for ' + name + '...'
-	body = Net::HTTP.get(URI.parse('http://www.ximalaya.com/tracks/' + id + '.json'))
+	body = open('http://www.ximalaya.com/tracks/' + id + '.json').read
 	return JSON.parse(body)['play_path_32']
 end
 
