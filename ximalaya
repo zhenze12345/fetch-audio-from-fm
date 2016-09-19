@@ -10,7 +10,7 @@ require 'os'
 
 def fetch_sound_list(url)
 	puts 'fetching sound list...'
-	body = Net::HTTP.get(URI.parse(url))
+	body = open(url).read
 	document = Oga.parse_html(body)
 	soundids = document.xpath('//li/attribute::sound_id').map { |elem| elem.text }
 	names = document.xpath('//li[@sound_id]//a[contains(@class, "title")]/attribute::title').map.with_index(1) { |elem, index| elem.text.match(/^\d/) ? elem.text : sprintf("%02d%s", index, elem.text) }
