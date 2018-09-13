@@ -9,13 +9,46 @@ require 'os'
 
 def fetch_sound_list(url)
 	puts 'fetching sound list...'
+	albumid = ""
+
+	match = /^https:\/\/www\.ximalaya\.com\/[^\/]+\/(\d+)/.match(url)
+	if match
+		albumid = match[1]
+	else
+		puts "url format is not correct"
+		exit 1
+	end
+
 	body = open(url).read
 	document = Oga.parse_html(body)
-	soundids = document.xpath('//li/attribute::sound_id').map { |elem| elem.text }
-	names = document.xpath('//li[@sound_id]//a[contains(@class, "title")]/attribute::title').map.with_index(1) { |elem, index| elem.text.match(/^\d/) ? elem.text : sprintf("%02d%s", index, elem.text) }
-	titles = names.map { |text| text.gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3/, '') }
-	puts 'fetch sound list successfully'
-	return Hash[soundids.zip(titles)]
+	h2s = document.xpath('//div[contains(@class, "head")]/h2')
+	if h2s.length == 0
+		puts "can not fetch h2 contains album count"
+		exit 1
+	end
+
+	album_count = nil
+	h2s.each do |h2|
+		match = /\((\d+)\)/.match(h2.text)
+		if match
+			album_count = match[1]
+			break
+		end
+	end
+
+	if not album_count
+		puts "cannot fetch album count"
+		exit 1
+	end
+
+	body = open('https://www.ximalaya.com/revision/play/album?albumId=' + albumid + '&pageSize=' + album_count).read
+	response = JSON.parse(body)
+	if response['ret'] != 200
+		puts "fetch album list failed"
+		exit 1
+	end
+
+	return Hash[response['data']['tracksAudioPlay'].map{ |elem| [elem['trackName'].match(/^\d/) ? elem['trackName'] : sprintf("%02d%s", elem['index'], elem['trackName']), elem['src']] }.map{ |elem| [elem[0].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3$/, ''), elem[1]] }]
 end
 
 def fetch_audio_url(id, name)
@@ -71,9 +104,8 @@ def fetch_audio(argv)
 		end
 	end
 	begin
-		hash.keys.each do |id|
-			name = hash[id]
-			url = fetch_audio_url(id, name)
+		hash.keys.each do |name|
+			url = hash[name]
 			fetch_audio_file(url, name)
 			queue.push name
 		end
