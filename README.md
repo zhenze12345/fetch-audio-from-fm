@@ -3,7 +3,7 @@
 
 现在支持的网站:
 ------
-www.ximalya.com  
+www.ximalaya.com  
 www.qingting.fm  
 www.kaolafm.com  
 
@@ -13,7 +13,7 @@ www.kaolafm.com
 
 使用方法:
 ------
-ruby ximalya http://www.ximalaya.com/11129614/album/2872220  
+ruby ximalaya http://www.ximalaya.com/11129614/album/2872220  
 如果希望下载标题包含某个词(如:侯景传)的音频，可以使用:  
 ruby ximalaya http://www.ximalaya.com/11129614/album/2872220 侯景传  
 其他网站的下载方法都相同  
@@ -25,4 +25,4 @@ https://github.com/rdp/os
 
 Notes:
 ------
-ximalya是[https://github.com/zhenze12345/ximalaya](https://github.com/zhenze12345/ximalaya)的多线程版本
+ximalaya是[https://github.com/zhenze12345/ximalaya](https://github.com/zhenze12345/ximalaya)的多线程版本
