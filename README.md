@@ -5,11 +5,11 @@
 ------
 www.ximalaya.com  
 www.qingting.fm  
-~~www.kaolafm.com~~
+www.lizhi.fm
 
 注意:
 ------
-除kaolafm以外其他网站必须安装ffmpeg
+除lizhi以外其他网站必须安装ffmpeg
 
 使用方法:
 ------
