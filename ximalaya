@@ -117,7 +117,7 @@ def fetch_audio(argv)
 		queue.push nil
 	end
 	thread_pool.map(&:join)
-	hash.values.each { |name| File.delete(name + '.m4a') if File.exist?(name + '.m4a') }
+	hash.keys.each { |name| File.delete(name + '.m4a') if File.exist?(name + '.m4a') }
 end
 
 fetch_audio(ARGV)
