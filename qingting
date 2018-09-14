@@ -44,8 +44,7 @@ def convert_url_to_api(url)
 	if url =~ /(?:http:\/\/)?www.qingting.fm\/channels\/(\d+)(?:\/\d+)?/
 		return 'http://i.qingting.fm/wapi/channels/' + $1 + '/programs/page/'
 	else
-		puts "invalid url: " + url
-		exit 1
+		raise "invalid url: " + url
 	end
 end
 
