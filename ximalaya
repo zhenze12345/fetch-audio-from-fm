@@ -15,16 +15,14 @@ def fetch_sound_list(url)
 	if match
 		albumid = match[1]
 	else
-		puts "url format is not correct"
-		exit 1
+		raise "url format is not correct"
 	end
 
 	body = open(url).read
 	document = Oga.parse_html(body)
 	h2s = document.xpath('//div[contains(@class, "head")]/h2')
 	if h2s.length == 0
-		puts "can not fetch h2 contains album count"
-		exit 1
+		raise "can not fetch h2 contains album count"
 	end
 
 	album_count = nil
@@ -37,15 +35,13 @@ def fetch_sound_list(url)
 	end
 
 	if not album_count
-		puts "cannot fetch album count"
-		exit 1
+		raise "cannot fetch album count"
 	end
 
 	body = open('https://www.ximalaya.com/revision/play/album?albumId=' + albumid + '&pageSize=' + album_count).read
 	response = JSON.parse(body)
 	if response['ret'] != 200
-		puts "fetch album list failed"
-		exit 1
+		raise "fetch album list failed"
 	end
 
 	return Hash[response['data']['tracksAudioPlay'].map{ |elem| [elem['trackName'].match(/^\d/) ? elem['trackName'] : sprintf("%02d%s", elem['index'], elem['trackName']), elem['src']] }.map{ |elem| [elem[0].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3$/, ''), elem[1]] }]
