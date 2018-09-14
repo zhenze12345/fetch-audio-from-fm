@@ -7,7 +7,9 @@ require 'date'
 require 'os'
 
 def get_sound_array(document)
-	return document.xpath('//div[contains(@class, "box-title-with-radio-controller")]/following::ul[contains(@class, "audioList")]//a[contains(@class, "audio-list-item")]').map { |a| [a['title'].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3/, ''), JSON.parse(open('https://www.lizhi.fm/media/url/' + a['href'].gsub(/^.*\/(\d+)$/, "\\1")).read)['data']['url']] }
+	xpath_base = '//div[contains(@class, "box-title-with-radio-controller")]/following::ul[contains(@class, "audioList")]//'
+	index_array = document.xpath(xpath_base + 'span[contains(@class, "radio-list-item-index")]').map { |span| span.text }
+	return document.xpath(xpath_base + 'a[contains(@class, "audio-list-item")]').map { |a| [a['title'].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3/, ''), JSON.parse(open('https://www.lizhi.fm/media/url/' + a['href'].gsub(/^.*\/(\d+)$/, "\\1")).read)['data']['url']] }.map.with_index(0) { |elem, i| [sprintf("%02d%s", index_array[i].to_i, elem[0]), elem[1]] }
 end
 
 def fetch_sound_list(url)
