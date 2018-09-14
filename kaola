@@ -29,7 +29,7 @@ end
 
 def fetch_audio(argv)
 	if argv.empty?
-		puts "usage: ./ximalaya.rb url [filter]"
+		puts "usage: ./kaola url [filter]"
 		exit 1
 	end
 
