@@ -6,10 +6,14 @@ require 'open-uri'
 require 'date'
 require 'os'
 
+def get_sound_array(document)
+	return document.xpath('//div[contains(@class, "box-title-with-radio-controller")]/following::ul[contains(@class, "audioList")]//a[contains(@class, "audio-list-item")]').map { |a| [a['title'].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3/, ''), JSON.parse(open('https://www.lizhi.fm/media/url/' + a['href'].gsub(/^.*\/(\d+)$/, "\\1")).read)['data']['url']] }
+end
+
 def fetch_sound_list(url)
 	puts 'fetching sound list...'
 	document = Oga.parse_html(open(url).read)
-	return Hash[document.xpath('//div[contains(@class, "box-title-with-radio-controller")]/following::ul[contains(@class, "audioList")]//a[contains(@class, "audio-list-item")]').map { |a| [a['title'].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3/, ''), JSON.parse(open('https://www.lizhi.fm/media/url/' + a['href'].gsub(/^.*\/(\d+)$/, "\\1")).read)['data']['url']] }]
+	return Hash[document.xpath('//div[contains(@class, "page")]/a[not(@class)]').map{ |a| get_sound_array(Oga.parse_html(open('http://www.lizhi.fm' + a['href']).read)) }.reduce(get_sound_array(document)) { |sum, elem| sum + elem }]
 end
 
 def fetch_audio_file(url, name)
