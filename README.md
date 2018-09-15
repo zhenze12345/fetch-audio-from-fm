@@ -3,9 +3,9 @@
 
 现在支持的网站:
 ------
-www.ximalaya.com  
-www.qingting.fm  
-www.lizhi.fm
+[喜马拉雅](www.ximalaya.com)  
+[蜻蜓FM](www.qingting.fm) 
+[荔枝FM](www.lizhi.fm)
 
 注意:
 ------
