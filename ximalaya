@@ -38,13 +38,19 @@ def fetch_sound_list(url)
 		raise "cannot fetch album count"
 	end
 
-	body = open('https://www.ximalaya.com/revision/play/album?albumId=' + albumid + '&pageSize=' + album_count).read
-	response = JSON.parse(body)
-	if response['ret'] != 200
-		raise "fetch album list failed"
-	end
+	page_size = album_count.to_i / 30 + 1
+	array = []
 
-	return Hash[response['data']['tracksAudioPlay'].map{ |elem| [elem['trackName'].match(/^\d/) ? elem['trackName'] : sprintf("%02d%s", elem['index'], elem['trackName']), elem['src']] }.map{ |elem| [elem[0].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3$/, ''), elem[1]] }]
+	for i in 1..page_size
+		body = open('https://www.ximalaya.com/revision/play/album?albumId=' + albumid + '&pageNum=' + page_size.to_s).read
+		response = JSON.parse(body)
+		if response['ret'] != 200
+			raise "fetch album list failed"
+		end
+
+		array += response['data']['tracksAudioPlay'].map{ |elem| [elem['trackName'].match(/^\d/) ? elem['trackName'] : sprintf("%02d%s", elem['index'], elem['trackName']), elem['src']] }.map{ |elem| [elem[0].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3$/, ''), elem[1]] }
+	end
+	return Hash[array]
 end
 
 def fetch_audio_url(id, name)
