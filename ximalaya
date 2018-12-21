@@ -42,7 +42,7 @@ def fetch_sound_list(url)
 	array = []
 
 	for i in 1..page_size
-		body = open('https://www.ximalaya.com/revision/play/album?albumId=' + albumid + '&pageNum=' + page_size.to_s).read
+		body = open('https://www.ximalaya.com/revision/play/album?albumId=' + albumid + '&pageNum=' + i.to_s).read
 		response = JSON.parse(body)
 		if response['ret'] != 200
 			raise "fetch album list failed"
