@@ -21,8 +21,8 @@ ruby ximalaya http://www.ximalaya.com/11129614/album/2872220 侯景传
 依赖:
 ------
 https://github.com/YorickPeterse/oga  
-https://github.com/rdp/os
-https://www.ffmpeg.org/
+https://github.com/rdp/os  
+https://www.ffmpeg.org
 
 Notes:
 ------
