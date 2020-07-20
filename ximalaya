@@ -27,7 +27,6 @@ def fetch_sound_list(url)
 
 	album_count = nil
 	spans.each do |span|
-		puts span.text
 		match = /(\d+)/.match(span.text)
 		if match
 			album_count = match[1]
