@@ -20,14 +20,15 @@ def fetch_sound_list(url)
 
 	body = open(url).read
 	document = Oga.parse_html(body)
-	h2s = document.xpath('//div[contains(@class, "head")]/h2')
-	if h2s.length == 0
-		raise "can not fetch h2 contains album count"
+	spans = document.xpath('//span[contains(@class, "active")]/span[contains(@class, "zH_")]')
+	if spans.length == 0
+		raise "can not fetch span contains album count"
 	end
 
 	album_count = nil
-	h2s.each do |h2|
-		match = /\((\d+)\)/.match(h2.text)
+	spans.each do |span|
+		puts span.text
+		match = /(\d+)/.match(span.text)
 		if match
 			album_count = match[1]
 			break
