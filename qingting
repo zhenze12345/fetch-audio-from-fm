@@ -8,6 +8,8 @@ require 'open3'
 require 'os'
 require 'openssl'
 
+AUDIO_PER_PAGE = 30
+
 def fetch_sound_list(url)
 	puts 'fetching sound list...'
 	albumid = ""
@@ -39,14 +41,14 @@ def fetch_sound_list(url)
 		raise "cannot fetch album count"
 	end
 
-	page_size = album_count.to_i / 30 + 1
+	page_size = album_count.to_i / AUDIO_PER_PAGE + 1
 	array = []
 
 	for page in 1..page_size
 		body = open(url + page.to_s + '/').read
 		document = Oga.parse_html(body)
 		as = document.xpath('//a[@class="pTitle"]')
-		array += as.each_with_index.map{ |a,i| [a.text.match(/^\d/) ? a.text : sprintf("%02d%s", i + 1 + ( page - 1 ) * 30, a.text), constuct_url(a)] }.map{ |elem| [elem[0].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3$/, ''), elem[1]] }
+		array += as.each_with_index.map{ |a,i| [a.text.match(/^\d/) ? a.text : sprintf("%02d%s", i + 1 + ( page - 1 ) * AUDIO_PER_PAGE, a.text), constuct_url(a)] }.map{ |elem| [elem[0].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3$/, ''), elem[1]] }
 	end
 	return Hash[array]
 end
