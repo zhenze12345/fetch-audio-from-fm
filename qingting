@@ -1,21 +1,70 @@
 #!/usr/bin/ruby
 
+require 'oga'
 require 'json'
 require 'open-uri'
 require 'thread'
 require 'open3'
 require 'os'
+require 'openssl'
 
 def fetch_sound_list(url)
 	puts 'fetching sound list...'
-	body = open(url + "1").read
-	page_size = JSON.parse(body)['total'] / 30 + 1
+	albumid = ""
+
+	match = /^https:\/\/www\.qingting\.fm\/channels\/(\d+)(\/)?$/.match(url)
+	if match
+		albumid = match[1]
+	else
+		raise "url format is not correct"
+	end
+	if url[-1] != '/'
+		url = url + '/'
+	end
+
+	body = open(url).read
+	document = Oga.parse_html(body)
+	spans = document.xpath('//span[@class="total"]')
+
+	album_count = nil
+	spans.each do |span|
+		match = /(\d+)/.match(span.text)
+		if match
+			album_count = match[1]
+			break
+		end
+	end
+
+	if not album_count
+		raise "cannot fetch album count"
+	end
+
+	page_size = album_count.to_i / 30 + 1
 	array = []
-	for i in 1..page_size
-		body = open(url + i.to_s).read
-		array += JSON.parse(body)['data'].map.with_index(1) {|info, index| [index + (i - 1) * 30,info]}.select{ |elem| elem[1]['file_path'] != nil }.map {|elem| index = elem[0]; info = elem[1]; name = info['name'].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3/, ''); [name.match(/^\d/) ? name : sprintf("%02d%s", index, name) , 'http://od.qingting.fm/' + info['file_path']]}
+
+	for page in 1..page_size
+		body = open(url + page.to_s + '/').read
+		document = Oga.parse_html(body)
+		as = document.xpath('//a[@class="pTitle"]')
+		array += as.each_with_index.map{ |a,i| [a.text.match(/^\d/) ? a.text : sprintf("%02d%s", i + 1 + ( page -1 ) * 30, a.text), constuct_url(a)] }.map{ |elem| [elem[0].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3$/, ''), elem[1]] }
 	end
 	return Hash[array]
+end
+
+def constuct_url(a)
+	match = /\/channels\/(\d+)\/programs\/(\d+)/.match(a.get('href'))
+	if not match
+		raise "fetch album id and audio id from " + url + " failed"
+	end
+	albumid = match[1]
+	audioid = match[2]
+	t = Time.new
+	url = '/audiostream/redirect/' + albumid + '/' + audioid + '?access_token=&device_id=MOBILESITE&qingting_id=&t=' + (t.to_f * 1000).to_i.to_s
+	return 'https://audio.qingting.fm' + url + '&sign=' + sign(url)
+end
+
+def sign(url)
+	return OpenSSL::HMAC.hexdigest("MD5", "fpMn12&38f_2e", url)
 end
 
 def convert_m4a_to_mp3(name)
@@ -40,21 +89,13 @@ def fetch_audio_file(url, name)
 	puts 'download ' + name + ' successfully'
 end
 
-def convert_url_to_api(url)
-	if url =~ /(?:http:\/\/)?www.qingting.fm\/channels\/(\d+)(?:\/\d+)?/
-		return 'http://i.qingting.fm/wapi/channels/' + $1 + '/programs/page/'
-	else
-		raise "invalid url: " + url
-	end
-end
-
 def fetch_audio(argv)
 	if argv.empty?
 		puts "usage: ./qingting url [filter]"
 		exit 1
 	end
 
-	url = convert_url_to_api(argv[0])
+	url = argv[0]
 	filter = argv[1]
 
 	queue = Queue.new
