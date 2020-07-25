@@ -46,7 +46,7 @@ def fetch_sound_list(url)
 		body = open(url + page.to_s + '/').read
 		document = Oga.parse_html(body)
 		as = document.xpath('//a[@class="pTitle"]')
-		array += as.each_with_index.map{ |a,i| [a.text.match(/^\d/) ? a.text : sprintf("%02d%s", i + 1 + ( page -1 ) * 30, a.text), constuct_url(a)] }.map{ |elem| [elem[0].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3$/, ''), elem[1]] }
+		array += as.each_with_index.map{ |a,i| [a.text.match(/^\d/) ? a.text : sprintf("%02d%s", i + 1 + ( page - 1 ) * 30, a.text), constuct_url(a)] }.map{ |elem| [elem[0].gsub(/[\s\(\)\"\'\\\/-]/, '').gsub(/\.mp3$/, ''), elem[1]] }
 	end
 	return Hash[array]
 end
